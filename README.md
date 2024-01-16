@@ -8,7 +8,17 @@ Documentation of the API can be found at [docs.recombee.com](https://docs.recomb
 
 ## Installation
 
-The client will available in the Maven Central Repository in the upcoming days.
+The client is available in the [Maven Central Repository](https://mvnrepository.com/artifact/com.recombee/apiclientkotlin/), so you just need to add the following entry to your gradle.build file:
+
+```gradle
+repositories {
+   mavenCentral()
+}
+
+dependencies {
+   implementation "com.recombee.apiclientkotlin:4.1.0"
+}
+```
 
 ## How to use
 
@@ -24,6 +34,7 @@ It is intentionally not possible to change the item catalog (properties of items
 ```kotlin
 import com.recombee.apiclientkotlin.RecombeeClient
 import com.recombee.apiclientkotlin.util.Region
+import com.recombee.apiclientkotlin.exceptions.ApiException
 import com.recombee.apiclientkotlin.requests.*
 
 
@@ -35,12 +46,12 @@ val client = RecombeeClient(
 )
 
 // Interactions take the ID of the user and the ID of the item
-client.send(AddBookmark("user-13434", "item-256"))
-client.send(AddCartAddition("user-4395", "item-129"))
-client.send(AddDetailView("user-9318", "item-108"))
-client.send(AddPurchase("user-7499", "item-750"))
-client.send(AddRating("user-3967", "item-365", 0.5))
-client.send(SetViewPortion("user-4289", "item-487", 0.3))
+client.send(AddBookmark(userId = "user-13434", itemId = "item-256"))
+client.send(AddCartAddition(userId = "user-4395", itemId = "item-129"))
+client.send(AddDetailView(userId = "user-9318", itemId = "item-108"))
+client.send(AddPurchase(userId = "user-7499", itemId = "item-750"))
+client.send(AddRating(userId = "user-3967", itemId = "item-365", rating = 0.5))
+client.send(SetViewPortion(userId = "user-4289", itemId = "item-487", portion = 0.3))
 ```
 
 ### Requesting recommendations
@@ -60,17 +71,16 @@ There are two callbacks (both are optional):
 val request = RecommendItemsToUser(
     userId = "user-x", 
     count = 10, 
-    scenario = "homepage-for-you", 
-    returnProperties = true
+    scenario = "homepage-for-you"
 )
 
 client.send(request,
-    { recommendationResponse ->  // response of type RecommendationResponse
+    { recommendationResponse: RecommendationResponse ->
         for (recommendedItem in recommendationResponse.recomms) {
-            println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
+            println("ID: ${recommendedItem.id}")
         }
     },
-    { exception ->
+    { exception: ApiException ->
         println("Exception: $exception")
         // use fallback ...
     }
@@ -86,17 +96,16 @@ client.send(request,
 val request = RecommendItemsToUser(
     userId = "user-x", 
     count = 10, 
-    scenario = "homepage-for-you", 
-    returnProperties = true
+    scenario = "homepage-for-you"
 )
 
 val result = client.sendAsync(request)
 
-result.onSuccess { recommendationResponse ->
+result.onSuccess { recommendationResponse: RecommendationResponse ->
     for (recommendedItem in recommendationResponse.recomms) {
-        println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
+        println("ID: ${recommendedItem.id}")
     }
-}.onFailure { exception ->
+}.onFailure { exception -> // ApiException
     println("Exception: $exception")
     // use fallback ...
 }
@@ -119,12 +128,12 @@ val request = SearchItems(
 )
 
 client.send(request,
-    { searchResponse ->  // response of type SearchResponse
+    { searchResponse: SearchResponse ->
         for (recommendedItem in searchResponse.recomms) {
             println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
         }
     },
-    { exception ->
+    { exception: ApiException ->
         println("Exception: $exception")
         // use fallback ...
     }
@@ -147,11 +156,11 @@ val request = SearchItems(
 
 val result = client.sendAsync(request)
 
-result.onSuccess { searchResponse ->
+result.onSuccess { searchResponse: SearchResponse ->
     for (recommendedItem in searchResponse.recomms) {
         println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
     }
-}.onFailure { exception ->
+}.onFailure { exception -> // ApiException
     println("Exception: $exception")
     // use fallback ...
 }
@@ -163,10 +172,10 @@ Recombee can return items that shall be shown to a user as next recommendations 
 
 ```kotlin
 client.sendAsync(RecommendItemsToUser("user-1", 5))
-    .onSuccess { firstResponse ->
+    .onSuccess { firstResponse: RecommendationResponse ->
 
         client.sendAsync(RecommendNextItems(firstResponse.recommId, 5))
-            .onSuccess { secondResponse ->
+            .onSuccess { secondResponse: RecommendationResponse ->
                 // Show next recommendations
             }
     }
