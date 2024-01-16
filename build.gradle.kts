@@ -56,6 +56,16 @@ kotlin {
     explicitApi()
 }
 
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+    from(tasks.javadoc)
+}
+
 // Retrieve credentials and other properties
 val ossrhUsername: String by project
 val ossrhPassword: String by project
@@ -71,6 +81,9 @@ publishing {
     publications {
         create<MavenPublication>("mavenKotlin") {
             from(components["kotlin"])
+
+            artifact(sourcesJar)
+            artifact(javadocJar)
 
             pom {
                 name.set("Recombee API Client in Kotlin")
@@ -100,12 +113,23 @@ publishing {
 
     repositories {
         maven {
-            val releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
             url = uri(releasesRepoUrl)
             credentials {
                 username = ossrhUsername
                 password = ossrhPassword
             }
         }
+    }
+}
+
+signing {
+    if (findProperty("signing.keyId") != null &&
+        findProperty("signing.secretKeyRingFile") != null &&
+        findProperty("signing.password") != null) {
+
+        sign(publishing.publications["mavenKotlin"])
+    } else {
+        println("Signing properties not found, skipping signing configuration.")
     }
 }
