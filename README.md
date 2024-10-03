@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-   implementation "com.recombee.apiclientkotlin:4.1.0"
+   implementation "com.recombee.apiclientkotlin:4.1.1"
 }
 ```
 

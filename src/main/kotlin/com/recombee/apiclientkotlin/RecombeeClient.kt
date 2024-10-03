@@ -13,7 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
+import com.google.gson.ToNumberPolicy
 import com.google.gson.reflect.TypeToken
 
 import okhttp3.*
@@ -28,6 +30,7 @@ import com.recombee.apiclientkotlin.bindings.*
 import com.recombee.apiclientkotlin.exceptions.*
 import java.io.InterruptedIOException
 import java.net.SocketTimeoutException
+
 
 /**
  * Client for interacting with Recombee API.
@@ -49,6 +52,10 @@ public class RecombeeClient(
 ) {
     private val publicTokenBytes: ByteArray = publicToken.toByteArray(StandardCharsets.UTF_8)
     private val hostUri: String = getHostUri(baseUri, region)
+
+    public val gson: Gson = GsonBuilder()
+        .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+        .create()
 
     private fun getRegionalBaseUri(region: Region): String {
         return when (region) {
@@ -158,7 +165,7 @@ public class RecombeeClient(
         return OkHttp3Request.Builder()
             .url(processRequestUri(request))
             .post(createJsonRequestBody(request.bodyParameters))
-            .header("User-Agent", "recombee-kotlin-api-client/4.1.0")
+            .header("User-Agent", "recombee-kotlin-api-client/4.1.1")
             .build()
     }
 
@@ -222,7 +229,7 @@ public class RecombeeClient(
             request is Batch -> parseBatchResponse(request, body) as ResponseType
             else -> {
                 val type: Type = object : TypeToken<ResponseType>() {}.type
-                Gson().fromJson<ResponseType>(body, type)
+                gson.fromJson<ResponseType>(body, type)
             }
         }
     }

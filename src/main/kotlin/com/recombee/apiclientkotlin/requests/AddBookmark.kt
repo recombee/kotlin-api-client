@@ -23,7 +23,7 @@ public class AddBookmark (
     public val cascadeCreate: Boolean? = true,
     public val recommId: String? = null,
     public val additionalData: Map<String, Any>? = null
-): Request<String>(1000) {
+): Request<String>(3000) {
 
     /**
      * A string representing the path part of the URI.
