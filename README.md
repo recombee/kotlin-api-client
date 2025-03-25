@@ -1,206 +1,171 @@
-# Recombee API Client
+<div align="center">
+  <img
+    src="https://raw.githubusercontent.com/recombee/.github/refs/heads/main/assets/mark.svg"
+    width="64px"
+    align="center"
+    alt="Recombee"
+  />
+  <br />
+  <h1>Recombee API Client</h1>
+</div>
 
-A Kotlin client (SDK) for easy use of the [Recombee](https://www.recombee.com/) recommendation API in Android applications.
+<p align="center">
+<a href="https://mvnrepository.com/artifact/com.recombee/apiclientkotlin" rel="nofollow"><img src="https://img.shields.io/maven-central/v/com.recombee/apiclientkotlin" alt="Version"></a>
+<a href="https://opensource.org/licenses/MIT" rel="nofollow"><img src="https://img.shields.io/github/license/recombee/kotlin-api-client" alt="License"></a>
+</p>
 
-If you don't have an account at Recombee yet, you can create a free account [here](https://www.recombee.com/).
+<div align="center">
+  <a href="https://docs.recombee.com/kotlin_client">Documentation</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="https://github.com/recombee/kotlin-api-client/issues/new">Issues</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="mailto:support@recombee.com">Support</a>
+  <br />
+</div>
 
-Documentation of the API can be found at [docs.recombee.com](https://docs.recombee.com/).
+## ✨ Features
 
-## Installation
+- Thin Kotlin wrapper around the Recombee API
+- Supported endpoints: [Interactions](https://docs.recombee.com/api#user-item-interactions), [Recommendations](https://docs.recombee.com/api#recommendations) & [Search](https://docs.recombee.com/api#search)
+- Made for Android apps and Compose Multiplatform
 
-The client is available in the [Maven Central Repository](https://mvnrepository.com/artifact/com.recombee/apiclientkotlin/), so you just need to add the following entry to your gradle.build file:
+## 🚀 Getting Started
 
-```gradle
-repositories {
-   mavenCentral()
-}
-
-dependencies {
-   implementation "com.recombee.apiclientkotlin:5.0.0"
-}
-```
-
-## How to use
-
-This library allows you to request recommendations and send interactions between users and items (views, bookmarks, purchases ...) to Recombee. It uses the **public token** for authentication.
-
-It is intentionally not possible to change the item catalog (properties of items) with the public token, so you should use one of the following ways to send it to Recombee:
-
- - Use one of the server-side SDKs (Node.js, PHP, Java...). The synchronization can done for example by a peridodically run script. See [this section](https://docs.recombee.com/gettingstarted.html#managing-item-catalog) for more details.
- - Set a catalog feed at [Recombee web admin](https://admin.recombee.com/).
-
-### Sending interactions
-
-```kotlin
-import com.recombee.apiclientkotlin.RecombeeClient
-import com.recombee.apiclientkotlin.util.Region
-import com.recombee.apiclientkotlin.exceptions.ApiException
-import com.recombee.apiclientkotlin.requests.*
-
-
-// Initialize client with name of your database and PUBLIC token
-val client = RecombeeClient(
-    databaseId = "id-of-your-db",
-    publicToken = "...db-public-token...",
-    region = Region.UsWest
-)
-
-// Interactions take the ID of the user and the ID of the item
-client.send(AddBookmark(userId = "user-13434", itemId = "item-256"))
-client.send(AddCartAddition(userId = "user-4395", itemId = "item-129"))
-client.send(AddDetailView(userId = "user-9318", itemId = "item-108"))
-client.send(AddPurchase(userId = "user-7499", itemId = "item-750"))
-client.send(AddRating(userId = "user-3967", itemId = "item-365", rating = 0.5))
-client.send(SetViewPortion(userId = "user-4289", itemId = "item-487", portion = 0.3))
-```
-
-### Requesting recommendations
-
-You can [recommend items to user](https://docs.recombee.com/api.html#recommend-items-to-user), [recommend items to item](https://docs.recombee.com/api.html#recommend-items-to-item) or even [recommend Item Segments](https://docs.recombee.com/api#recommend-item-segments-to-user) such as categories, genres or artists.
-
-It is possible to use callbacks (`send` method) or coroutines (`sendAsync` method).
-
-#### Callbacks
-
-There are two callbacks (both are optional):
-- `onResponse`: Callback function invoked in case of successful response.
-
-- `onFailure`: Callback function invoked with an *ApiException* in case of a failure.
+Add the dependency into your `build.gradle.kts`:
 
 ```kotlin
-val request = RecommendItemsToUser(
-    userId = "user-x", 
-    count = 10, 
-    scenario = "homepage-for-you"
+implementation("com.recombee:apiclientkotlin:5.0.0")
+```
+
+### 📚 Version Catalogs
+
+If you're using [version catalogs](https://developer.android.com/build/migrate-to-catalogs), first add the dependency into your `libs.versions.toml`:
+
+```toml
+[versions]
+recombee = "5.0.0"
+
+[libraries]
+recombee = { group = "com.recombee", name = "apiclientkotlin", version.ref = "recombee" }
+```
+
+Then reference it in your `build.gradle.kts`:
+
+```kotlin
+implementation(libs.recombee)
+```
+
+### 🏗️ Example
+
+You can send user-item interactions and receive recommendations as follows:
+
+```kotlin
+// Initialize the API client with the ID of your database and the associated PUBLIC token
+val client =
+    RecombeeClient(
+        databaseId = "database-id",
+        publicToken = "...db-public-token...",
+        region = Region.UsWest // the region of your database
+    )
+
+// Send interactions
+client.send(
+    AddDetailView(
+        userId = "user-4395",
+        itemId = "item-129",
+        recommId = "23eaa09b-0e24-4487-ba9c-8e255feb01bb",
+    )
 )
 
-client.send(request,
-    { recommendationResponse: RecommendationResponse ->
-        for (recommendedItem in recommendationResponse.recomms) {
-            println("ID: ${recommendedItem.id}")
+// Request recommendations
+client.send(
+    // Get 10 items for "user-x" using the "homepage-top-for-you" scenario from the Admin UI
+    RecommendItemsToUser(
+        userId = "user-x",
+        count = 10,
+        scenario = "homepage-top-for-you",
+        returnProperties = true,
+        includedProperties = listOf("title")
+    ),
+    { response: RecommendationResponse ->
+        // `recommId` needs to be sent with interactions based on recommendations
+        println("recommId: ${response.recommId}")
+
+        // The `recomms` object contains the `id` (and `values` if `returnProperties` is true)
+        for (item in response.recomms) {
+            println("ID: ${item.id}, Title: ${item.getValues()["title"]}")
         }
     },
     { exception: ApiException ->
         println("Exception: $exception")
-        // use fallback ...
+        // Ideally, you should provide a fallback if an error occurs...
     }
 )
 ```
 
-
-#### Coroutines
-
-```kotlin
-// Assuming this is inside a CoroutineScope
-
-val request = RecommendItemsToUser(
-    userId = "user-x", 
-    count = 10, 
-    scenario = "homepage-for-you"
-)
-
-val result = client.sendAsync(request)
-
-result.onSuccess { recommendationResponse: RecommendationResponse ->
-    for (recommendedItem in recommendationResponse.recomms) {
-        println("ID: ${recommendedItem.id}")
-    }
-}.onFailure { exception -> // ApiException
-    println("Exception: $exception")
-    // use fallback ...
-}
-
-```
-
-### Personalized search
-
-[Personalized full-text search](https://docs.recombee.com/api.html#search-items) is requested in the same way as recommendations.
-
-#### Callbacks
+Coroutine support is also available, simply replace `send` with `sendAsync`:
 
 ```kotlin
-val request = SearchItems(
-    userId = "user-x",
-    searchQuery = "..user's search query",
-    count = 10,
-    scenario = "search",
-    returnProperties = true
-)
+suspend fun getItems(): List<Item> {
+    // Get 10 items for "user-x" using the "homepage-top-for-you" scenario from the Admin UI
+    val result =
+        client.sendAsync(
+            RecommendItemsToUser(
+                userId = "user-x",
+                count = 10,
+                scenario = "homepage-top-for-you",
+                returnProperties = true,
+                includedProperties = listOf("title", "images")
+            )
+        )
 
-client.send(request,
-    { searchResponse: SearchResponse ->
-        for (recommendedItem in searchResponse.recomms) {
-            println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
-        }
-    },
-    { exception: ApiException ->
-        println("Exception: $exception")
-        // use fallback ...
+    // Ideally, you should provide a fallback if an error occurs
+    if (result.isFailure) {
+        return listOf()
     }
-)
-```
 
+    val data = result.getOrNull() ?: return listOf()
 
-#### Coroutines
+    // `recommId` needs to be sent with interactions based on recommendations
+    println("recommId: ${data.recommId}")
 
-```kotlin
-// Assuming this is inside a CoroutineScope
-
-val request = SearchItems(
-    userId = "user-x",
-    searchQuery = "..user's search query",
-    count = 10,
-    scenario = "search",
-    returnProperties = true
-)
-
-val result = client.sendAsync(request)
-
-result.onSuccess { searchResponse: SearchResponse ->
-    for (recommendedItem in searchResponse.recomms) {
-        println("ID: ${recommendedItem.id} Values: ${recommendedItem.getValues()}")
+    // Map the recommendations to your own internal data type
+    return data.recomms.map { item ->
+        Item(
+            id = item.id,
+            title = item.getValues()["title"] as? String ?: "",
+            images = item.getValues()["images"] as? List<String> ?: listOf(),
+            recommId = data.recommId
+        )
     }
-}.onFailure { exception -> // ApiException
-    println("Exception: $exception")
-    // use fallback ...
 }
 ```
 
-### Recommend Next Items
+> [!TIP]
+> We also published a simple [example Android app](https://github.com/recombee/android-demo) to help you with the integration. Feel free to use it as a reference.
+>
+> ![Android Demo app](https://raw.githubusercontent.com/recombee/android-demo/refs/heads/main/images/screenshots.png)
 
-Recombee can return items that shall be shown to a user as next recommendations when the user e.g. scrolls the page down (infinite scroll) or goes to the next page. See [Recommend next items](https://docs.recombee.com/api.html#recommend-next-items) for more info.
+## 📝 Documentation
 
-```kotlin
-client.sendAsync(RecommendItemsToUser("user-1", 5))
-    .onSuccess { firstResponse: RecommendationResponse ->
+Discover the full [Kotlin API Client documentation](https://docs.recombee.com/kotlin_client) for comprehensive guides and examples.
 
-        client.sendAsync(RecommendNextItems(firstResponse.recommId, 5))
-            .onSuccess { secondResponse: RecommendationResponse ->
-                // Show next recommendations
-            }
-    }
-```
+For a complete breakdown of all endpoints and their responses, check out our [API Reference](https://docs.recombee.com/api).
 
-### Optional parameters
+## 🤝 Contributing
 
-Recommendation requests accept various optional parameters (see [the docs](https://docs.recombee.com/api.html#recommendations)). Following example shows some of them:
+We welcome all contributions—whether it’s fixing a bug, improving documentation, or suggesting a new feature.
 
-```kotlin
-val request = RecommendItemsToUser(
-    userId = "user-13434",
-    count = 5,
-    scenario = "homepage-for-you", // Label particular usage
-    returnProperties = true, // Return properties of the recommended items
-    includedProperties = listOf("title", "img_url", "url", "price"), // Properties to be included in the response
-    filter = "'title' != null AND 'availability' == \"in stock\"" // Filter condition
-)
-```
+To contribute, simply fork the repository, make your changes, and submit a pull request. Be sure to provide a clear description of your changes.
 
-## Exception handling
+Thanks for helping make this project better!
 
-Following types of exceptions can be produced:
-- *ResponseException*: Recombee API returned an error code (e.g. due to passing an invalid value to a parameter)
-- *ApiIOException*: Request did not succeed
-  - In case of an timeout a subtype *ApiTimeoutException* is produced
+## 🔧 Troubleshooting
 
-*ApiException* is the base class of both *ResponseException* and *ApiIOException*.
+Are you having issues? We recommend checking [our documentation](https://docs.recombee.com/kotlin_client) to see if it contains a possible solution.
+
+If you want to reach out, you can either [open a GitHub issue](https://github.com/recombee/kotlin-api-client/issues/new) or send an email to support@recombee.com.
+
+## 📄 License
+
+The Recombee Kotlin API Client is provided under the [MIT License](https://opensource.org/licenses/MIT).
