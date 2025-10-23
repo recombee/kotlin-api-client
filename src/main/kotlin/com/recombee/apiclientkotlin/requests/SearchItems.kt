@@ -14,7 +14,7 @@ import com.recombee.apiclientkotlin.bindings.*
  * @param count Number of items to be returned (N for the top-N results).
  * @param scenario Scenario defines a particular search field in your user interface.
 
-You can set various settings to the [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com). You can also see the performance of each scenario in the Admin UI separately, so you can check how well each field performs.
+You can set various settings to the [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com). You can also see the performance of each scenario in the Admin UI separately, so you can check how well each field performs.
 
 The AI that optimizes models to get the best results may optimize different scenarios separately, or even use different models in each of the scenarios.
 
@@ -22,7 +22,7 @@ The AI that optimizes models to get the best results may optimize different scen
  * @param returnProperties With `returnProperties=true`, property values of the recommended items are returned along with their IDs in a JSON dictionary. The acquired property values can be used to easily display the recommended items to the user. 
 
 Example response:
-```
+```json
   {
     "recommId": "ce52ada4-e4d9-4885-943c-407db2dee837",
     "recomms": 
@@ -53,7 +53,7 @@ Example response:
  * @param includedProperties Allows specifying which properties should be returned when `returnProperties=true` is set. The properties are given as a comma-separated list.
 
 Example response for `includedProperties=description,price`:
-```
+```json
   {
     "recommId": "a86ee8d5-cd8e-46d1-886c-8b3771d0520b",
     "recomms":
@@ -77,20 +77,60 @@ Example response for `includedProperties=description,price`:
   }
 ```
 
- * @param filter Boolean-returning [ReQL](https://docs.recombee.com/reql.html) expression, which allows you to filter recommended items based on the values of their attributes.
+ * @param filter Boolean-returning [ReQL](https://docs.recombee.com/reql) expression, which allows you to filter recommended items based on the values of their attributes.
 
-Filters can also be assigned to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Filters can also be assigned to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
 
- * @param booster Number-returning [ReQL](https://docs.recombee.com/reql.html) expression, which allows you to boost the recommendation rate of some items based on the values of their attributes.
+ * @param booster Number-returning [ReQL](https://docs.recombee.com/reql) expression, which allows you to boost the recommendation rate of some items based on the values of their attributes.
 
-Boosters can also be assigned to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Boosters can also be assigned to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
 
  * @param logic Logic specifies the particular behavior of the recommendation models. You can pick tailored logic for your domain and use case.
-See [this section](https://docs.recombee.com/recommendation_logics.html) for a list of available logics and other details.
+See [this section](https://docs.recombee.com/recommendation_logics) for a list of available logics and other details.
 
 The difference between `logic` and `scenario` is that `logic` specifies mainly behavior, while `scenario` specifies the place where recommendations are shown to the users.
 
-Logic can also be set to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Logic can also be set to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
+
+ * @param reqlExpressions A dictionary of [ReQL](https://docs.recombee.com/reql) expressions that will be executed for each recommended item.
+This can be used to compute additional properties of the recommended items that are not stored in the database.
+
+The keys are the names of the expressions, and the values are the actual ReQL expressions.
+
+Example request:
+```json
+{
+  "reqlExpressions": {
+    "isInUsersCity": "context_user[\"city\"] in 'cities'",
+    "distanceToUser": "earth_distance('location', context_user[\"location\"])"
+  }
+}
+```
+
+Example response:
+```json
+{
+  "recommId": "ce52ada4-e4d9-4885-943c-407db2dee837",
+  "recomms": 
+    [
+      {
+        "id": "restaurant-178",
+        "reqlEvaluations": {
+          "isInUsersCity": true,
+          "distanceToUser": 5200.2
+        }
+      },
+      {
+        "id": "bar-42",
+        "reqlEvaluations": {
+          "isInUsersCity": false,
+          "distanceToUser": 2516.0
+        }
+      }
+    ],
+   "numberNextRecommsCalls": 0
+}
+```
 
  * @param expertSettings Dictionary of custom options.
 
@@ -108,6 +148,7 @@ public class SearchItems (
     public val filter: String? = null,
     public val booster: String? = null,
     public val logic: Logic? = null,
+    public val reqlExpressions: Map<String, String>? = null,
     public val expertSettings: Map<String, Any>? = null,
     public val returnAbGroup: Boolean? = null
 ): Request<SearchResponse>(3000) {
@@ -144,6 +185,7 @@ public class SearchItems (
             filter?.let { parameters["filter"] = it}
             booster?.let { parameters["booster"] = it}
             logic?.let { parameters["logic"] = it}
+            reqlExpressions?.let { parameters["reqlExpressions"] = it}
             expertSettings?.let { parameters["expertSettings"] = it}
             returnAbGroup?.let { parameters["returnAbGroup"] = it}
             return parameters

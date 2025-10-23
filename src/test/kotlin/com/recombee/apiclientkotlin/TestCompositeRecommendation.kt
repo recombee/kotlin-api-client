@@ -12,15 +12,15 @@ import com.recombee.apiclientkotlin.requests.*
 import com.recombee.apiclientkotlin.bindings.*
 
 
-class TestRecommendItemsToItemSegment: RecombeeTest() {
+class TestCompositeRecommendation: RecombeeTest() {
 
     @Test
     fun callbackTest() {
         // Initialize the real RecombeeClient
         val client = getClient()
 
-        // Create a RecommendItemsToItemSegment request
-        val request = RecommendItemsToItemSegment("3", "user-1", 5, scenario = "i-to-is", reqlExpressions = mapOf("boolean" to "true", "number" to "if ('num-cores' > 0) then 1 else 2", "string" to "\"test\""))
+        // Create a CompositeRecommendation request
+        val request = CompositeRecommendation("composite-i-i", 10, resultSettings = CompositeRecommendationStageParameters(filter = "'num-cores' > 8", returnProperties = true))
 
         // CountDownLatch for waiting for the response
         val latch = CountDownLatch(1)
@@ -34,7 +34,7 @@ class TestRecommendItemsToItemSegment: RecombeeTest() {
                 // Handle successful response
                 requestSuccessful = true
 
-                assertEquals(response.recomms.size, 5)
+                
                 latch.countDown()
             },
             onFailure = { exception ->
@@ -57,8 +57,8 @@ class TestRecommendItemsToItemSegment: RecombeeTest() {
         // Initialize the real RecombeeClient
         val client = getClient()
 
-        // Create a RecommendItemsToItemSegment request
-        val request = RecommendItemsToItemSegment("3", "user-1", 5, scenario = "i-to-is", reqlExpressions = mapOf("boolean" to "true", "number" to "if ('num-cores' > 0) then 1 else 2", "string" to "\"test\""))
+        // Create a CompositeRecommendation request
+        val request = CompositeRecommendation("composite-i-i", 10, resultSettings = CompositeRecommendationStageParameters(filter = "'num-cores' > 8", returnProperties = true))
 
         // Call the sendAsync method and wait for the result
         val result = client.sendAsync(request)
@@ -66,7 +66,7 @@ class TestRecommendItemsToItemSegment: RecombeeTest() {
         // Process the result
         result.onSuccess { response ->
             // Handle successful response
-            assertEquals(response.recomms.size, 5)
+            
         }.onFailure { exception ->
             // Handle failure
             fail("Request failed with exception: ${exception.message}")

@@ -16,6 +16,7 @@ import com.recombee.apiclientkotlin.bindings.*
  * @param cascadeCreate Sets whether the given user/item should be created if not present in the database.
  * @param recommId If this detail view is based on a recommendation request, `recommId` is the id of the clicked recommendation.
  * @param additionalData A dictionary of additional data for the interaction.
+ * @param autoPresented Indicates whether the item was automatically presented to the user (e.g., in a swiping feed) or explicitly requested by the user (e.g., by clicking on a link). Defaults to `false`.
  */
 public class AddDetailView (
     public val userId: String,
@@ -24,7 +25,8 @@ public class AddDetailView (
     public val duration: Long? = null,
     public val cascadeCreate: Boolean? = true,
     public val recommId: String? = null,
-    public val additionalData: Map<String, Any>? = null
+    public val additionalData: Map<String, Any>? = null,
+    public val autoPresented: Boolean? = null
 ): Request<String>(3000) {
 
     /**
@@ -57,6 +59,7 @@ public class AddDetailView (
             cascadeCreate?.let { parameters["cascadeCreate"] = it}
             recommId?.let { parameters["recommId"] = it}
             additionalData?.let { parameters["additionalData"] = it}
+            autoPresented?.let { parameters["autoPresented"] = it}
             return parameters
         }
 

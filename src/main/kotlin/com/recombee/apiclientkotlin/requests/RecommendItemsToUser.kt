@@ -14,7 +14,7 @@ import com.recombee.apiclientkotlin.bindings.*
 
  * @param scenario Scenario defines a particular application of recommendations. It can be, for example, "homepage", "cart", or "emailing".
 
-You can set various settings to the [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com). You can also see the performance of each scenario in the Admin UI separately, so you can check how well each application performs.
+You can set various settings to the [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com). You can also see the performance of each scenario in the Admin UI separately, so you can check how well each application performs.
 
 The AI that optimizes models to get the best results may optimize different scenarios separately or even use different models in each of the scenarios.
 
@@ -23,7 +23,7 @@ The AI that optimizes models to get the best results may optimize different scen
  * @param returnProperties With `returnProperties=true`, property values of the recommended items are returned along with their IDs in a JSON dictionary. The acquired property values can be used to easily display the recommended items to the user. 
 
 Example response:
-```
+```json
   {
     "recommId": "ce52ada4-e4d9-4885-943c-407db2dee837",
     "recomms": 
@@ -54,7 +54,7 @@ Example response:
  * @param includedProperties Allows specifying which properties should be returned when `returnProperties=true` is set. The properties are given as a comma-separated list.
 
 Example response for `includedProperties=description,price`:
-```
+```json
   {
     "recommId": "a86ee8d5-cd8e-46d1-886c-8b3771d0520b",
     "recomms":
@@ -78,28 +78,68 @@ Example response for `includedProperties=description,price`:
   }
 ```
 
- * @param filter Boolean-returning [ReQL](https://docs.recombee.com/reql.html) expression, which allows you to filter recommended items based on the values of their attributes.
+ * @param filter Boolean-returning [ReQL](https://docs.recombee.com/reql) expression, which allows you to filter recommended items based on the values of their attributes.
 
-Filters can also be assigned to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Filters can also be assigned to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
 
- * @param booster Number-returning [ReQL](https://docs.recombee.com/reql.html) expression, which allows you to boost the recommendation rate of some items based on the values of their attributes.
+ * @param booster Number-returning [ReQL](https://docs.recombee.com/reql) expression, which allows you to boost the recommendation rate of some items based on the values of their attributes.
 
-Boosters can also be assigned to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Boosters can also be assigned to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
 
  * @param logic Logic specifies the particular behavior of the recommendation models. You can pick tailored logic for your domain and use case.
-See [this section](https://docs.recombee.com/recommendation_logics.html) for a list of available logics and other details.
+See [this section](https://docs.recombee.com/recommendation_logics) for a list of available logics and other details.
 
 The difference between `logic` and `scenario` is that `logic` specifies mainly behavior, while `scenario` specifies the place where recommendations are shown to the users.
 
-Logic can also be set to a [scenario](https://docs.recombee.com/scenarios.html) in the [Admin UI](https://admin.recombee.com).
+Logic can also be set to a [scenario](https://docs.recombee.com/scenarios) in the [Admin UI](https://admin.recombee.com).
 
- * @param diversity **Expert option** Real number from [0.0, 1.0], which determines how mutually dissimilar the recommended items should be. The default value is 0.0, i.e., no diversification. Value 1.0 means maximal diversification.
+ * @param reqlExpressions A dictionary of [ReQL](https://docs.recombee.com/reql) expressions that will be executed for each recommended item.
+This can be used to compute additional properties of the recommended items that are not stored in the database.
 
- * @param minRelevance **Expert option** Specifies the threshold of how relevant must the recommended items be to the user. Possible values one of: "low", "medium", "high". The default value is "low", meaning that the system attempts to recommend a number of items equal to *count* at any cost. If there is not enough data (such as interactions or item properties), this may even lead to bestseller-based recommendations to be appended to reach the full *count*. This behavior may be suppressed by using "medium" or "high" values. In such a case, the system only recommends items of at least the requested relevance and may return less than *count* items when there is not enough data to fulfill it.
+The keys are the names of the expressions, and the values are the actual ReQL expressions.
 
- * @param rotationRate **Expert option** If your users browse the system in real-time, it may easily happen that you wish to offer them recommendations multiple times. Here comes the question: how much should the recommendations change? Should they remain the same, or should they rotate? Recombee API allows you to control this per request in a backward fashion. You may penalize an item for being recommended in the near past. For the specific user, `rotationRate=1` means maximal rotation, `rotationRate=0` means absolutely no rotation. You may also use, for example, `rotationRate=0.2` for only slight rotation of recommended items. Default: `0`.
+Example request:
+```json
+{
+  "reqlExpressions": {
+    "isInUsersCity": "context_user[\"city\"] in 'cities'",
+    "distanceToUser": "earth_distance('location', context_user[\"location\"])"
+  }
+}
+```
 
- * @param rotationTime **Expert option** Taking *rotationRate* into account, specifies how long it takes for an item to recover from the penalization. For example, `rotationTime=7200.0` means that items recommended less than 2 hours ago are penalized. Default: `7200.0`.
+Example response:
+```json
+{
+  "recommId": "ce52ada4-e4d9-4885-943c-407db2dee837",
+  "recomms": 
+    [
+      {
+        "id": "restaurant-178",
+        "reqlEvaluations": {
+          "isInUsersCity": true,
+          "distanceToUser": 5200.2
+        }
+      },
+      {
+        "id": "bar-42",
+        "reqlEvaluations": {
+          "isInUsersCity": false,
+          "distanceToUser": 2516.0
+        }
+      }
+    ],
+   "numberNextRecommsCalls": 0
+}
+```
+
+ * @param diversity **Expert option:** Real number from [0.0, 1.0], which determines how mutually dissimilar the recommended items should be. The default value is 0.0, i.e., no diversification. Value 1.0 means maximal diversification.
+
+ * @param minRelevance **Expert option:** Specifies the threshold of how relevant must the recommended items be to the user. Possible values one of: "low", "medium", "high". The default value is "low", meaning that the system attempts to recommend a number of items equal to *count* at any cost. If there is not enough data (such as interactions or item properties), this may even lead to bestseller-based recommendations to be appended to reach the full *count*. This behavior may be suppressed by using "medium" or "high" values. In such a case, the system only recommends items of at least the requested relevance and may return less than *count* items when there is not enough data to fulfill it.
+
+ * @param rotationRate **Expert option:** If your users browse the system in real-time, it may easily happen that you wish to offer them recommendations multiple times. Here comes the question: how much should the recommendations change? Should they remain the same, or should they rotate? Recombee API allows you to control this per request in a backward fashion. You may penalize an item for being recommended in the near past. For the specific user, `rotationRate=1` means maximal rotation, `rotationRate=0` means absolutely no rotation. You may also use, for example, `rotationRate=0.2` for only slight rotation of recommended items. Default: `0`.
+
+ * @param rotationTime **Expert option:** Taking *rotationRate* into account, specifies how long it takes for an item to recover from the penalization. For example, `rotationTime=7200.0` means that items recommended less than 2 hours ago are penalized. Default: `7200.0`.
 
  * @param expertSettings Dictionary of custom options.
 
@@ -116,6 +156,7 @@ public class RecommendItemsToUser (
     public val filter: String? = null,
     public val booster: String? = null,
     public val logic: Logic? = null,
+    public val reqlExpressions: Map<String, String>? = null,
     public val diversity: Double? = null,
     public val minRelevance: String? = null,
     public val rotationRate: Double? = null,
@@ -155,6 +196,7 @@ public class RecommendItemsToUser (
             filter?.let { parameters["filter"] = it}
             booster?.let { parameters["booster"] = it}
             logic?.let { parameters["logic"] = it}
+            reqlExpressions?.let { parameters["reqlExpressions"] = it}
             diversity?.let { parameters["diversity"] = it}
             minRelevance?.let { parameters["minRelevance"] = it}
             rotationRate?.let { parameters["rotationRate"] = it}

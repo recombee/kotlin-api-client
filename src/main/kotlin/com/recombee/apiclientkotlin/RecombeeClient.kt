@@ -165,7 +165,7 @@ public class RecombeeClient(
         return OkHttp3Request.Builder()
             .url(processRequestUri(request))
             .post(createJsonRequestBody(request.bodyParameters))
-            .header("User-Agent", "recombee-kotlin-api-client/5.0.0")
+            .header("User-Agent", "recombee-kotlin-api-client/6.0.0")
             .build()
     }
 

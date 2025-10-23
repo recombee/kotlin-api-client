@@ -9,7 +9,7 @@ package com.recombee.apiclientkotlin.bindings
  * @param settings Parameters passed to the logic
  */
 public class Logic(
-    public val name: String,
+    public val name: String? = null,
     public val settings: Map<String, Any>? = null): RecombeeBinding() {
 }
 
