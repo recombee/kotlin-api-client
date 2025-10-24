@@ -1,20 +1,11 @@
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.*
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.22.0")
-    }
-}
-
 plugins {
     kotlin("jvm") version "1.9.21"
     `maven-publish`
     signing
-    id("io.codearte.nexus-staging") version "0.22.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "com.recombee"
@@ -66,17 +57,13 @@ val javadocJar by tasks.registering(Jar::class) {
     from(tasks.javadoc)
 }
 
-// Retrieve credentials and other properties
-val ossrhUsername: String by project
-val ossrhPassword: String by project
-
-// Nexus Staging Plugin Configuration
-configure<io.codearte.gradle.nexus.NexusStagingExtension> {
-    packageGroup = "com.recombee"
-    username = ossrhUsername
-    password = ossrhPassword
+tasks.register("releaseToCentral") {
+    dependsOn("publishToSonatype", "closeAndReleaseSonatypeStagingRepository")
 }
 
+/**
+ * Publications
+ */
 publishing {
     publications {
         create<MavenPublication>("mavenKotlin") {
@@ -110,26 +97,38 @@ publishing {
             }
         }
     }
-
-    repositories {
-        maven {
-            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            url = uri(releasesRepoUrl)
-            credentials {
-                username = ossrhUsername
-                password = ossrhPassword
-            }
-        }
-    }
 }
 
+/**
+ * Signing
+ * Provide standard Gradle signing props:
+ * - signing.keyId
+ * - signing.password
+ * - signing.secretKeyRingFile (or use in-memory key via signingKey / signingPassword)
+ */
 signing {
     if (findProperty("signing.keyId") != null &&
         findProperty("signing.secretKeyRingFile") != null &&
         findProperty("signing.password") != null) {
-
         sign(publishing.publications["mavenKotlin"])
     } else {
         println("Signing properties not found, skipping signing configuration.")
+    }
+}
+
+/**
+ * Nexus Publish (Sonatype Central)
+ * Use sonatypeUsername / sonatypePassword (user-token pair recommended).
+ * For Sonatype Central (OSSRH EOL), use the new staging API & snapshots URLs.
+ */
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+
+            username.set(findProperty("sonatypeUsername") as String?)
+            password.set(findProperty("sonatypePassword") as String?)
+        }
     }
 }
