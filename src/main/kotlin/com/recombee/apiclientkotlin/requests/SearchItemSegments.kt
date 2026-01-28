@@ -35,6 +35,43 @@ Logic can also be set to a [scenario](https://docs.recombee.com/scenarios) in th
 
  * @param returnAbGroup If there is a custom AB-testing running, return the name of the group to which the request belongs.
 
+ * @param reqlExpressions A dictionary of [ReQL](https://docs.recombee.com/reql) expressions that will be executed for each recommended Item Segment.
+This can be used to compute additional properties of the recommended Item Segments.
+
+The keys are the names of the expressions, and the values are the actual ReQL expressions.
+
+Example request:
+```json
+{
+  "reqlExpressions": {
+    "countItems": "size(segment_items(\"categories\", 'segmentId'))"
+  }
+}
+```
+
+Example response:
+```json
+{
+  "recommId": "a7ac55a4-8d6e-4f19-addc-abac4164d8a8",
+  "recomms": 
+    [
+      {
+        "id": "category-fantasy-books",
+        "reqlEvaluations": {
+          "countItems": 486
+        }
+      },
+      {
+        "id": "category-sci-fi-costumes",
+        "reqlEvaluations": {
+          "countItems": 19
+        }
+      }
+    ],
+   "numberNextRecommsCalls": 0
+}
+```
+
  */
 public class SearchItemSegments (
     public val userId: String,
@@ -46,7 +83,8 @@ public class SearchItemSegments (
     public val booster: String? = null,
     public val logic: Logic? = null,
     public val expertSettings: Map<String, Any>? = null,
-    public val returnAbGroup: Boolean? = null
+    public val returnAbGroup: Boolean? = null,
+    public val reqlExpressions: Map<String, String>? = null
 ): Request<SearchResponse>(3000) {
 
     /**
@@ -81,6 +119,7 @@ public class SearchItemSegments (
             logic?.let { parameters["logic"] = it}
             expertSettings?.let { parameters["expertSettings"] = it}
             returnAbGroup?.let { parameters["returnAbGroup"] = it}
+            reqlExpressions?.let { parameters["reqlExpressions"] = it}
             return parameters
         }
 
