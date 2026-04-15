@@ -34,7 +34,7 @@
 Add the dependency into your `build.gradle.kts`:
 
 ```kotlin
-implementation("com.recombee:apiclientkotlin:6.1.0")
+implementation("com.recombee:apiclientkotlin:6.2.0")
 ```
 
 ### 📚 Version Catalogs
@@ -43,7 +43,7 @@ If you're using [version catalogs](https://developer.android.com/build/migrate-t
 
 ```toml
 [versions]
-recombee = "6.1.0"
+recombee = "6.2.0"
 
 [libraries]
 recombee = { group = "com.recombee", name = "apiclientkotlin", version.ref = "recombee" }

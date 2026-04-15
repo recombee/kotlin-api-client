@@ -30,6 +30,8 @@ Logic can also be set to a [scenario](https://docs.recombee.com/scenarios) in th
 
  * @param segmentId ID of the segment from `contextSegmentationId` for which the recommendations are to be generated.
 
+ * @param searchQuery Search query provided by the user. It is used for the full-text search. Only applicable if the *scenario* corresponds to a search scenario.
+
  * @param cascadeCreate If the entity for the source recommendation does not exist in the database, returns a list of non-personalized recommendations and creates the user in the database. This allows, for example, rotations in the following recommendations for that entity, as the entity will be already known to the system.
 
  * @param sourceSettings Parameters applied for recommending the *Source* stage. The accepted parameters correspond with the recommendation sub-endpoint used to recommend the *Source*.
@@ -46,6 +48,7 @@ public class CompositeRecommendation (
     public val userId: String? = null,
     public val logic: Logic? = null,
     public val segmentId: String? = null,
+    public val searchQuery: String? = null,
     public val cascadeCreate: Boolean? = true,
     public val sourceSettings: CompositeRecommendationStageParameters? = null,
     public val resultSettings: CompositeRecommendationStageParameters? = null,
@@ -81,6 +84,7 @@ public class CompositeRecommendation (
             userId?.let { parameters["userId"] = it}
             logic?.let { parameters["logic"] = it}
             segmentId?.let { parameters["segmentId"] = it}
+            searchQuery?.let { parameters["searchQuery"] = it}
             cascadeCreate?.let { parameters["cascadeCreate"] = it}
             sourceSettings?.let { parameters["sourceSettings"] = it}
             resultSettings?.let { parameters["resultSettings"] = it}
